@@ -3,7 +3,6 @@
 A premium, responsive Calculator web application built with vanilla HTML, CSS, and JavaScript. Designed for optimal user experience with a clean UI, mobile-first approach, and keyboard support.
 
 ![Calculator Screenshot](./screenshot-placeholder.png)
-*(Replace this with an actual screenshot of your app)*
 
 ## Features
 
