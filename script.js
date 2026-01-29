@@ -53,15 +53,19 @@ class Calculator {
 
     chooseOperation(operation) {
         if (this.currentOperand === 'Error') return;
-        if (this.currentOperand === '') return;
 
         if (this.previousOperand !== '') {
+            if (this.resetNextInput) {
+                this.operation = operation;
+                return;
+            }
             this.compute();
         }
 
         this.operation = operation;
         this.previousOperand = this.currentOperand;
-        this.currentOperand = '';
+        this.currentOperand = this.currentOperand;
+        this.resetNextInput = true;
     }
 
     toggleSign() {
@@ -93,6 +97,7 @@ class Calculator {
                 computation = prev + current;
                 break;
             case '-':
+            case '−':
                 computation = prev - current;
                 break;
             case '×':
@@ -167,6 +172,7 @@ class Calculator {
     }
 }
 
+
 // UI State
 const currentOperandText = document.querySelector('[id="current-operand"]');
 const previousOperandText = document.querySelector('[id="previous-operand"]');
@@ -176,11 +182,58 @@ const calculator = new Calculator(currentOperandText, previousOperandText);
 const numberButtons = document.querySelectorAll('[class*="btn number"]');
 const operationButtons = document.querySelectorAll('[class*="btn operator"]');
 const equalsButton = document.querySelector('[data-action="calculate"]');
-const deleteButton = document.querySelector('[data-action="delete"]'); // The header one if exists? Wait, I removed it.
+const deleteButton = document.querySelector('[data-action="delete"]');
 const clearButton = document.querySelector('[data-action="clear"]');
 const percentButton = document.querySelector('[data-action="percent"]');
 const signButton = document.querySelector('[data-action="sign"]');
-const backspaceBtn = document.getElementById('backspace-btn'); // The display one
+const backspaceBtn = document.getElementById('backspace-btn');
+
+// Copy to Clipboard
+const displayElement = document.querySelector('.display');
+const customTooltip = document.getElementById('copy-tooltip');
+
+displayElement.addEventListener('click', (e) => {
+    // Prevent copy if clicking backspace
+    if (e.target.closest('.backspace-btn')) return;
+
+    const textToCopy = currentOperandText.innerText;
+    if (!textToCopy) return;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        showTooltip();
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+});
+
+function showTooltip() {
+    customTooltip.classList.add('show');
+    setTimeout(() => {
+        customTooltip.classList.remove('show');
+    }, 1500);
+}
+
+// Visual Button Press Feedback
+function highlightButton(button) {
+    if (!button) return;
+    button.classList.add('pressed');
+    setTimeout(() => {
+        button.classList.remove('pressed');
+    }, 150);
+}
+
+function getButtonByText(text) {
+    // Helper to find button by visible text
+    const allBtns = document.querySelectorAll('.btn');
+    for (let btn of allBtns) {
+        if (btn.innerText === text) return btn;
+    }
+    return null;
+}
+
+function getButtonByAction(action) {
+    return document.querySelector(`[data-action="${action}"]`);
+}
 
 // Event Listeners
 numberButtons.forEach(button => {
@@ -234,34 +287,55 @@ percentButton.addEventListener('click', () => {
 // Keyboard Support
 document.addEventListener('keydown', (e) => {
     let key = e.key;
+    let buttonToHighlight = null;
 
     if (/[0-9]/.test(key)) {
         calculator.appendNumber(key);
+        buttonToHighlight = getButtonByText(key);
     }
     else if (key === '.') {
         calculator.appendNumber(key);
+        buttonToHighlight = getButtonByText('.');
     }
     else if (key === '+' || key === '-' || key === '*' || key === '/') {
         let op = key;
         if (op === '/') op = '÷';
         if (op === '*') op = '×';
+        if (op === '-') op = '−'; // The unicode minus in HTML
+
+        // If not found (user pressed minus on numpad), try standard minus
         calculator.chooseOperation(op);
+
+        // Try to find the button. Note: "−" vs "-"
+        buttonToHighlight = getButtonByText(op);
+        if (!buttonToHighlight && op === '−') buttonToHighlight = getButtonByAction('subtract');
+        if (!buttonToHighlight && op === '×') buttonToHighlight = getButtonByAction('multiply');
+        if (!buttonToHighlight && op === '÷') buttonToHighlight = getButtonByAction('divide');
+        if (!buttonToHighlight && op === '+') buttonToHighlight = getButtonByAction('add');
     }
     else if (key === 'Enter' || key === '=') {
-        e.preventDefault(); // Prevent accidental form sub
+        e.preventDefault();
         calculator.compute();
+        buttonToHighlight = equalsButton;
     }
     else if (key === 'Backspace') {
         calculator.delete();
+        buttonToHighlight = backspaceBtn; // Highlight the screen backspace
     }
     else if (key === 'Escape') {
         calculator.clear();
+        buttonToHighlight = clearButton;
     }
     else if (key === '%') {
         calculator.percentage();
+        buttonToHighlight = percentButton;
     }
 
     calculator.updateDisplay();
+
+    if (buttonToHighlight) {
+        highlightButton(buttonToHighlight);
+    }
 });
 
 // Theme Logic
