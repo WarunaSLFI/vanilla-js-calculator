@@ -1,5 +1,7 @@
 # Modern Premium Calculator
 
+[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://warunaslfi.github.io/vanilla-js-calculator/)
+
 A professional, high-fidelity Calculator web application built with vanilla HTML, CSS, and JavaScript. Featuring a **Neumorphic design**, **Glassmorphism history panel**, and a dedicated focus on premium user experience improvements like visual feedback and smart scrolling.
 
 ![Calculator Screenshot](./screenshot-placeholder.png)
