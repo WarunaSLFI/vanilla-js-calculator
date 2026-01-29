@@ -1,41 +1,38 @@
+/* -------------------------------------------------------------------------- */
+/*                                 Root Variables                             */
+/* -------------------------------------------------------------------------- */
 :root {
-    /* Premium Light Theme */
+    /* Light Theme Configuration */
     --bg-color: #e0e5ec;
     --card-bg: #e0e5ec;
     --text-main: #2d3748;
     --text-sec: #718096;
 
-    /* Neumorphic / Soft UI bases */
+    /* Component Colors */
     --btn-num-bg: #e0e5ec;
     --btn-num-text: #2d3748;
-    --btn-shadow-light: #ffffff;
-    --btn-shadow-dark: #a3b1c6;
-
-    /* Function Keys */
     --btn-fn-bg: #e0e5ec;
     --btn-fn-text: #2b6cb0;
-    /* Accent Blue for functions */
-
-    /* Operator Keys */
     --btn-op-bg: #eb6e4b;
-    /* Vibrant Orange */
     --btn-op-text: #ffffff;
 
-    /* Screen */
+    /* Neumorphic Shadows */
+    --btn-shadow-light: #ffffff;
+    --btn-shadow-dark: #a3b1c6;
+    --shadow-card: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+
+    /* Screen Styles */
     --screen-bg: #d1d9e6;
     --screen-shadow-inset: inset 6px 6px 12px #b8c2cc, inset -6px -6px 12px #ffffff;
     --screen-text: #1a202c;
 
-    --shadow-card: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
-    --panel-bg: rgba(255, 255, 255, 0.85);
-
-    /* Spacing */
+    /* Layout */
     --radius-main: 2rem;
     --radius-btn: 50%;
 }
 
 [data-theme="dark"] {
-    /* Premium Dark Theme - Deep Blue/Slate */
+    /* Dark Theme Configuration */
     --bg-color: #0f172a;
     --card-bg: #1e293b;
     --text-main: #f1f5f9;
@@ -43,30 +40,27 @@
 
     --btn-num-bg: #1e293b;
     --btn-num-text: #e2e8f0;
+    --btn-fn-bg: #1e293b;
+    --btn-fn-text: #60a5fa;
+    --btn-op-bg: #f59e0b;
+    --btn-op-text: #ffffff;
 
     /* Dark Shadows */
     --btn-shadow-light: #2d3e56;
-    /* Lighter part of dark shadow */
     --btn-shadow-dark: #0f151e;
-    /* Darker part */
-
-    --btn-fn-bg: #1e293b;
-    --btn-fn-text: #60a5fa;
-    /* Blue glow */
-
-    --btn-op-bg: #f59e0b;
-    /* Amber/Orange */
-    --btn-op-text: #ffffff;
+    --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 
     --screen-bg: #0f172a;
     --screen-shadow-inset: inset 5px 5px 15px #0a101d, inset -5px -5px 15px #2a3a52;
     --screen-text: #f8fafc;
     --screen-glow: 0 0 10px rgba(248, 250, 252, 0.4);
 
-    --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     --panel-bg: rgba(15, 23, 42, 0.9);
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                 Base Reset                                 */
+/* -------------------------------------------------------------------------- */
 *,
 *::before,
 *::after {
@@ -78,7 +72,6 @@
 body {
     font-family: 'Inter', sans-serif;
     font-variant-numeric: tabular-nums;
-    /* User requested Lato removed for professional look */
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
@@ -89,7 +82,6 @@ body {
     overflow: hidden;
 }
 
-/* Container */
 .app-container {
     position: relative;
     width: 100%;
@@ -100,7 +92,9 @@ body {
     padding: 1rem;
 }
 
-/* Calculator Card */
+/* -------------------------------------------------------------------------- */
+/*                              Calculator Card                               */
+/* -------------------------------------------------------------------------- */
 .calculator-card {
     background-color: var(--card-bg);
     width: 100%;
@@ -116,7 +110,7 @@ body {
     z-index: 10;
 }
 
-/* Header */
+/* Header & Controls */
 .header {
     display: flex;
     justify-content: space-between;
@@ -142,7 +136,9 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Theme Switch */
+/* -------------------------------------------------------------------------- */
+/*                               Theme Switch                                 */
+/* -------------------------------------------------------------------------- */
 .theme-switch-wrapper {
     display: flex;
     align-items: center;
@@ -202,7 +198,9 @@ input:checked+.slider::before {
     color: var(--text-sec);
 }
 
-/* Display Screen */
+/* -------------------------------------------------------------------------- */
+/*                               Display Screen                               */
+/* -------------------------------------------------------------------------- */
 .display {
     background-color: var(--screen-bg);
     box-shadow: var(--screen-shadow-inset);
@@ -214,14 +212,13 @@ input:checked+.slider::before {
     align-items: flex-start;
     flex-direction: column;
     height: 150px;
-    /* Increased height to fit content */
     position: relative;
     margin-bottom: 0.5rem;
     cursor: pointer;
     transition: box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
-/* Screen shine/reflection effect for premium feel */
+/* Reflection Effect */
 .display::before {
     content: '';
     position: absolute;
@@ -237,11 +234,9 @@ input:checked+.slider::before {
 .display-content {
     width: 100%;
     height: 100%;
-    /* Fill the fixed container */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    /* Space out history and current */
     align-items: flex-end;
     overflow: hidden;
 }
@@ -250,13 +245,10 @@ input:checked+.slider::before {
     font-size: 1rem;
     color: var(--text-sec);
     height: 1.5rem;
-    /* Fixed height instead of min-height */
     line-height: 1.5rem;
-    /* Center vertically */
     white-space: nowrap;
     opacity: 0.8;
     width: 100%;
-    /* Ensure it holds space even when empty */
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -273,13 +265,10 @@ input:checked+.slider::before {
     font-size: 2.5rem;
     font-weight: 300;
     color: var(--screen-text);
-    /* Prevent wrapping */
     white-space: nowrap;
     overflow-x: auto;
-    /* Hide scrollbar */
     scrollbar-width: none;
     -ms-overflow-style: none;
-
     width: 100%;
     text-align: right;
     line-height: 1.2;
@@ -291,52 +280,6 @@ input:checked+.slider::before {
     display: none;
 }
 
-.display-content {
-    width: 100%;
-    height: 100%;
-    /* Fill the fixed container */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    /* Space out history and current */
-    align-items: flex-end;
-    overflow: hidden;
-}
-
-.history-preview {
-    font-size: 0.9rem;
-    color: var(--text-sec);
-    height: 1.5rem;
-    /* Fixed height instead of min-height */
-    line-height: 1.5rem;
-    /* Center vertically */
-    white-space: nowrap;
-    opacity: 0.8;
-    width: 100%;
-    /* Ensure it holds space even when empty */
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.current-row {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.current-operand {
-    font-size: 2.8rem;
-    font-weight: 300;
-    color: var(--screen-text);
-    word-break: break-all;
-    line-height: 1.2;
-    text-shadow: var(--screen-glow, none);
-    transition: text-shadow 0.3s ease, color 0.3s ease;
-}
-
-/* Backspace Button inside Display */
 .backspace-btn {
     position: absolute;
     bottom: 10px;
@@ -355,7 +298,7 @@ input:checked+.slider::before {
     color: var(--btn-op-bg);
 }
 
-/* Tooltip for Copy */
+/* Tooltip */
 .copy-tooltip {
     position: absolute;
     top: 50%;
@@ -375,7 +318,9 @@ input:checked+.slider::before {
     opacity: 1;
 }
 
-/* Buttons Grid */
+/* -------------------------------------------------------------------------- */
+/*                                Button Grid                                 */
+/* -------------------------------------------------------------------------- */
 .buttons-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -397,14 +342,11 @@ input:checked+.slider::before {
     align-items: center;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-
-    /* Neumorphic Shadow Default */
     box-shadow: 6px 6px 10px var(--btn-shadow-dark), -6px -6px 10px var(--btn-shadow-light);
     color: var(--btn-num-text);
     background-color: var(--btn-num-bg);
 }
 
-/* Button Push Effect */
 .btn:active,
 .btn.pressed {
     transform: scale(0.95);
@@ -419,7 +361,6 @@ input:checked+.slider::before {
 
 .btn.operator:active,
 .btn.operator.pressed {
-    /* Different shadow for colored button */
     box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -444,7 +385,9 @@ input:checked+.slider::before {
     border-radius: 1rem;
 }
 
-/* History Panel - Glassmorphism */
+/* -------------------------------------------------------------------------- */
+/*                               History Panel                                */
+/* -------------------------------------------------------------------------- */
 .history-panel {
     position: absolute;
     top: 0;
@@ -485,7 +428,6 @@ input:checked+.slider::before {
     padding: 0.5rem;
 }
 
-/* Scrollbar for history */
 .history-list::-webkit-scrollbar {
     width: 6px;
 }
@@ -574,7 +516,9 @@ input:checked+.slider::before {
     pointer-events: auto;
 }
 
-/* Responsive */
+/* -------------------------------------------------------------------------- */
+/*                                Responsive                                  */
+/* -------------------------------------------------------------------------- */
 @media (max-width: 480px) {
     .calculator-card {
         height: 100%;

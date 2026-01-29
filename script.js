@@ -1,3 +1,6 @@
+/**
+ * Calculator Business Logic
+ */
 class Calculator {
     constructor(currentOperandElement, previousOperandElement) {
         this.currentOperandElement = currentOperandElement;
@@ -10,18 +13,15 @@ class Calculator {
         this.currentOperand = '0';
         this.previousOperand = '';
         this.operation = undefined;
-        this.resetNextInput = false; // Flag to clear input on next number entry after result
+        this.resetNextInput = false;
     }
 
     delete() {
-        if (this.currentOperand === 'Error') {
+        if (this.currentOperand === 'Error' || this.resetNextInput) {
             this.clear();
             return;
         }
-        if (this.resetNextInput) {
-            this.clear();
-            return;
-        }
+
         if (this.currentOperand.length === 1) {
             this.currentOperand = '0';
         } else {
@@ -37,13 +37,10 @@ class Calculator {
             this.resetNextInput = false;
         }
 
-        // Prevent multiple decimals
+        // Validation: Prevent invalid formats
         if (number === '.' && this.currentOperand.includes('.')) return;
-
-        // Prevent multiple leading zeroes
         if (number === '0' && this.currentOperand === '0') return;
 
-        // If '0' is the only character and we type a non-decimal, replace '0'
         if (this.currentOperand === '0' && number !== '.') {
             this.currentOperand = number.toString();
         } else {
@@ -54,6 +51,7 @@ class Calculator {
     chooseOperation(operation) {
         if (this.currentOperand === 'Error') return;
 
+        // Allow seamless operator switching
         if (this.previousOperand !== '') {
             if (this.resetNextInput) {
                 this.operation = operation;
@@ -69,8 +67,8 @@ class Calculator {
     }
 
     toggleSign() {
-        if (this.currentOperand === 'Error') return;
-        if (this.currentOperand === '0') return;
+        if (this.currentOperand === 'Error' || this.currentOperand === '0') return;
+
         if (this.currentOperand.startsWith('-')) {
             this.currentOperand = this.currentOperand.slice(1);
         } else {
@@ -97,7 +95,7 @@ class Calculator {
                 computation = prev + current;
                 break;
             case '-':
-            case '−':
+            case '−': // Handle Unicode minus from UI
                 computation = prev - current;
                 break;
             case '×':
@@ -117,7 +115,7 @@ class Calculator {
         }
 
         if (computation !== 'Error') {
-            // Fix long decimals
+            // Precision handling for floating point errors
             computation = Math.round(computation * 10000000000) / 10000000000;
             this.addToHistory(prev, this.operation, current, computation);
         }
@@ -131,21 +129,12 @@ class Calculator {
     getDisplayNumber(number) {
         if (number === 'Error') return 'Error';
         const stringNumber = number.toString();
-        const integerDigits = parseFloat(stringNumber.split('.')[0]);
-        const decimalDigits = stringNumber.split('.')[1];
+        const [integerDigits, decimalDigits] = stringNumber.split('.');
+        const parsedInteger = parseFloat(integerDigits);
 
-        let integerDisplay;
-        if (isNaN(integerDigits)) {
-            integerDisplay = '';
-        } else {
-            integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
-        }
+        let integerDisplay = isNaN(parsedInteger) ? '' : parsedInteger.toLocaleString('en', { maximumFractionDigits: 0 });
 
-        if (decimalDigits != null) {
-            return `${integerDisplay}.${decimalDigits}`;
-        } else {
-            return integerDisplay;
-        }
+        return decimalDigits != null ? `${integerDisplay}.${decimalDigits}` : integerDisplay;
     }
 
     updateDisplay() {
@@ -163,130 +152,103 @@ class Calculator {
             expression: `${prev} ${op} ${current}`,
             result: result
         };
-        // Add to beginning
-        this.history.unshift(entry);
-        // Limit to 10
-        if (this.history.length > 10) this.history.pop();
 
+        this.history.unshift(entry);
+        if (this.history.length > 10) this.history.pop();
         renderHistory();
     }
 }
 
-
-// UI State
-const currentOperandText = document.querySelector('[id="current-operand"]');
-const previousOperandText = document.querySelector('[id="previous-operand"]');
+/* -------------------------------------------------------------------------- */
+/*                            Initialization & DOM                            */
+/* -------------------------------------------------------------------------- */
+const currentOperandText = document.getElementById('current-operand');
+const previousOperandText = document.getElementById('previous-operand');
 const calculator = new Calculator(currentOperandText, previousOperandText);
 
-// Buttons
-const numberButtons = document.querySelectorAll('[class*="btn number"]');
-const operationButtons = document.querySelectorAll('[class*="btn operator"]');
-const equalsButton = document.querySelector('[data-action="calculate"]');
-const deleteButton = document.querySelector('[data-action="delete"]');
-const clearButton = document.querySelector('[data-action="clear"]');
-const percentButton = document.querySelector('[data-action="percent"]');
-const signButton = document.querySelector('[data-action="sign"]');
-const backspaceBtn = document.getElementById('backspace-btn');
+// Control Elements
+const elements = {
+    numbers: document.querySelectorAll('[class*="btn number"]'),
+    operators: document.querySelectorAll('[class*="btn operator"]'),
+    equals: document.querySelector('[data-action="calculate"]'),
+    clear: document.querySelector('[data-action="clear"]'),
+    delete: document.querySelector('[data-action="delete"]'),
+    percent: document.querySelector('[data-action="percent"]'),
+    sign: document.querySelector('[data-action="sign"]'),
+    backspace: document.getElementById('backspace-btn'),
+    display: document.querySelector('.display'),
+    themeCheckbox: document.getElementById('checkbox')
+};
 
-// Copy to Clipboard
-const displayElement = document.querySelector('.display');
+/* -------------------------------------------------------------------------- */
+/*                               Event Listeners                              */
+/* -------------------------------------------------------------------------- */
+
+// Numbers & Operators
+elements.numbers.forEach(btn => {
+    btn.addEventListener('click', () => {
+        calculator.appendNumber(btn.innerText);
+        calculator.updateDisplay();
+    });
+});
+
+elements.operators.forEach(btn => {
+    btn.addEventListener('click', () => {
+        calculator.chooseOperation(btn.innerText);
+        calculator.updateDisplay();
+    });
+});
+
+// Actions
+elements.equals.addEventListener('click', () => {
+    calculator.compute();
+    calculator.updateDisplay();
+});
+
+elements.clear.addEventListener('click', () => {
+    calculator.clear();
+    calculator.updateDisplay();
+});
+
+elements.sign.addEventListener('click', () => {
+    calculator.toggleSign();
+    calculator.updateDisplay();
+});
+
+elements.percent.addEventListener('click', () => {
+    calculator.percentage();
+    calculator.updateDisplay();
+});
+
+if (elements.backspace) {
+    elements.backspace.addEventListener('click', () => {
+        calculator.delete();
+        calculator.updateDisplay();
+    });
+}
+
+// Copy to Clipboard Support
 const customTooltip = document.getElementById('copy-tooltip');
 
-displayElement.addEventListener('click', (e) => {
-    // Prevent copy if clicking backspace
+elements.display.addEventListener('click', (e) => {
     if (e.target.closest('.backspace-btn')) return;
 
     const textToCopy = currentOperandText.innerText;
     if (!textToCopy) return;
 
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        showTooltip();
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
+    navigator.clipboard.writeText(textToCopy)
+        .then(() => showTooltip())
+        .catch(err => console.error('Copy failed:', err));
 });
 
 function showTooltip() {
     customTooltip.classList.add('show');
-    setTimeout(() => {
-        customTooltip.classList.remove('show');
-    }, 1500);
+    setTimeout(() => customTooltip.classList.remove('show'), 1500);
 }
-
-// Visual Button Press Feedback
-function highlightButton(button) {
-    if (!button) return;
-    button.classList.add('pressed');
-    setTimeout(() => {
-        button.classList.remove('pressed');
-    }, 150);
-}
-
-function getButtonByText(text) {
-    // Helper to find button by visible text
-    const allBtns = document.querySelectorAll('.btn');
-    for (let btn of allBtns) {
-        if (btn.innerText === text) return btn;
-    }
-    return null;
-}
-
-function getButtonByAction(action) {
-    return document.querySelector(`[data-action="${action}"]`);
-}
-
-// Event Listeners
-numberButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        calculator.appendNumber(button.innerText);
-        calculator.updateDisplay();
-    });
-});
-
-operationButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        calculator.chooseOperation(button.innerText);
-        calculator.updateDisplay();
-    });
-});
-
-equalsButton.addEventListener('click', () => {
-    calculator.compute();
-    calculator.updateDisplay();
-});
-
-clearButton.addEventListener('click', () => {
-    calculator.clear();
-    calculator.updateDisplay();
-});
-
-if (deleteButton) {
-    deleteButton.addEventListener('click', () => {
-        calculator.delete();
-        calculator.updateDisplay();
-    });
-}
-
-if (backspaceBtn) {
-    backspaceBtn.addEventListener('click', () => {
-        calculator.delete();
-        calculator.updateDisplay();
-    });
-}
-
-signButton.addEventListener('click', () => {
-    calculator.toggleSign();
-    calculator.updateDisplay();
-});
-
-percentButton.addEventListener('click', () => {
-    calculator.percentage();
-    calculator.updateDisplay();
-});
 
 // Keyboard Support
 document.addEventListener('keydown', (e) => {
-    let key = e.key;
+    const key = e.key;
     let buttonToHighlight = null;
 
     if (/[0-9]/.test(key)) {
@@ -297,95 +259,100 @@ document.addEventListener('keydown', (e) => {
         calculator.appendNumber(key);
         buttonToHighlight = getButtonByText('.');
     }
-    else if (key === '+' || key === '-' || key === '*' || key === '/') {
+    else if (['+', '-', '*', '/'].includes(key)) {
         let op = key;
         if (op === '/') op = '÷';
         if (op === '*') op = '×';
-        if (op === '-') op = '−'; // The unicode minus in HTML
+        if (op === '-') op = '−';
 
-        // If not found (user pressed minus on numpad), try standard minus
         calculator.chooseOperation(op);
 
-        // Try to find the button. Note: "−" vs "-"
+        // Map keyboard keys to UI buttons
         buttonToHighlight = getButtonByText(op);
-        if (!buttonToHighlight && op === '−') buttonToHighlight = getButtonByAction('subtract');
-        if (!buttonToHighlight && op === '×') buttonToHighlight = getButtonByAction('multiply');
-        if (!buttonToHighlight && op === '÷') buttonToHighlight = getButtonByAction('divide');
-        if (!buttonToHighlight && op === '+') buttonToHighlight = getButtonByAction('add');
+        if (!buttonToHighlight) {
+            const map = { '−': 'subtract', '×': 'multiply', '÷': 'divide', '+': 'add' };
+            if (map[op]) buttonToHighlight = document.querySelector(`[data-action="${map[op]}"]`);
+        }
     }
     else if (key === 'Enter' || key === '=') {
         e.preventDefault();
         calculator.compute();
-        buttonToHighlight = equalsButton;
+        buttonToHighlight = elements.equals;
     }
     else if (key === 'Backspace') {
         calculator.delete();
-        buttonToHighlight = backspaceBtn; // Highlight the screen backspace
+        buttonToHighlight = elements.backspace;
     }
     else if (key === 'Escape') {
         calculator.clear();
-        buttonToHighlight = clearButton;
+        buttonToHighlight = elements.clear;
     }
     else if (key === '%') {
         calculator.percentage();
-        buttonToHighlight = percentButton;
+        buttonToHighlight = elements.percent;
     }
 
     calculator.updateDisplay();
 
-    if (buttonToHighlight) {
-        highlightButton(buttonToHighlight);
-    }
+    if (buttonToHighlight) highlightButton(buttonToHighlight);
 });
 
-// Theme Logic
-const themeCheckbox = document.getElementById('checkbox');
-const storedTheme = localStorage.getItem('theme');
+function highlightButton(button) {
+    if (!button) return;
+    button.classList.add('pressed');
+    setTimeout(() => button.classList.remove('pressed'), 150);
+}
 
+function getButtonByText(text) {
+    return Array.from(document.querySelectorAll('.btn')).find(btn => btn.innerText === text);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               Theme Persistence                            */
+/* -------------------------------------------------------------------------- */
+const storedTheme = localStorage.getItem('theme');
 if (storedTheme) {
     document.documentElement.setAttribute('data-theme', storedTheme);
-    if (storedTheme === 'dark') {
-        themeCheckbox.checked = true;
-    }
+    elements.themeCheckbox.checked = storedTheme === 'dark';
 }
 
-themeCheckbox.addEventListener('change', function () {
-    if (this.checked) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
-    }
+elements.themeCheckbox.addEventListener('change', function () {
+    const theme = this.checked ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
 });
 
-// History Panel Logic
-const historyPanel = document.getElementById('history-panel');
-const historyList = document.getElementById('history-list');
-const historyToggle = document.getElementById('history-toggle');
-const closeHistory = document.getElementById('close-history');
-const overlay = document.getElementById('overlay');
-const clearHistoryBtn = document.getElementById('clear-history-btn');
+/* -------------------------------------------------------------------------- */
+/*                               History Panel                                */
+/* -------------------------------------------------------------------------- */
+const historyElements = {
+    panel: document.getElementById('history-panel'),
+    list: document.getElementById('history-list'),
+    toggle: document.getElementById('history-toggle'),
+    close: document.getElementById('close-history'),
+    overlay: document.getElementById('overlay'),
+    clearBtn: document.getElementById('clear-history-btn')
+};
 
 function toggleHistory() {
-    historyPanel.classList.toggle('open');
-    overlay.classList.toggle('active');
+    historyElements.panel.classList.toggle('open');
+    historyElements.overlay.classList.toggle('active');
 }
 
-historyToggle.addEventListener('click', toggleHistory);
-closeHistory.addEventListener('click', toggleHistory);
-overlay.addEventListener('click', toggleHistory);
+[historyElements.toggle, historyElements.close, historyElements.overlay].forEach(el => {
+    el.addEventListener('click', toggleHistory);
+});
 
 function renderHistory() {
-    historyList.innerHTML = '';
+    historyElements.list.innerHTML = '';
 
     if (calculator.history.length === 0) {
-        historyList.innerHTML = '<div class="empty-state">No history yet</div>';
-        clearHistoryBtn.classList.add('hidden');
+        historyElements.list.innerHTML = '<div class="empty-state">No history yet</div>';
+        historyElements.clearBtn.classList.add('hidden');
         return;
     }
 
-    clearHistoryBtn.classList.remove('hidden');
+    historyElements.clearBtn.classList.remove('hidden');
 
     calculator.history.forEach(item => {
         const itemEl = document.createElement('div');
@@ -397,16 +364,16 @@ function renderHistory() {
 
         itemEl.addEventListener('click', () => {
             calculator.currentOperand = item.result.toString();
-            calculator.resetNextInput = true; // reusing result acts like a finished calculations
+            calculator.resetNextInput = true;
             calculator.updateDisplay();
-            toggleHistory(); // Auto close on select
+            toggleHistory();
         });
 
-        historyList.appendChild(itemEl);
+        historyElements.list.appendChild(itemEl);
     });
 }
 
-clearHistoryBtn.addEventListener('click', () => {
+historyElements.clearBtn.addEventListener('click', () => {
     calculator.history = [];
     renderHistory();
 });
